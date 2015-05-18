@@ -1,0 +1,969 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Packages used in Drupal 8</title>
+
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/sky.css" id="theme">
+
+		<!-- Code syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+					<h1>Drupal 8 &hearts; Symfony</h1>
+					<datetime>21 May 2015</datetime>
+				</section>
+
+				<section>
+					<h1>Gliph</h1>
+					<pre><code data-trim>composer require sdboyer/gliph</code></pre>
+					<p>Gliph is a graph library for PHP. It provides graph building blocks and datastructures for use by other PHP applications.</p>
+					<ul>
+						<li><a href="https://github.com/sdboyer/gliph" target="_blank">github.com/sdboyer/gliph</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h1>Symfony ClassLoader</h1>
+					<pre><code data-trim>composer require symfony/class-loader</code></pre>
+					<p>The ClassLoader component provides tools to autoload your classes and cache their locations for performance.</p>
+					<ul>
+						<li><a href="https://github.com/symfony/ClassLoader" target="_blank">github.com/symfony/ClassLoader</a></li>
+						<li><a href="http://symfony.com/doc/current/components/class_loader/introduction.html" target="_blank">symfony.com</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Symfony ClassLoader vs Composer</h2>
+					<p>
+						By default, the Symfony standard edition uses Composer's autoloader in the autoload.php file.
+					</p>
+					<p>
+						Unfortunately, this comes at a cost, as the loader iterates over all configured namespaces to find a particular file, making <code>file_exists</code> calls until it finally finds the file it's looking for.
+					</p>
+				</section>
+
+				<section>
+					<h2>Composer Solution</h2>
+					<h3>Class Map</h3>
+					<pre><code data-trim>composer dump-autoload --optimize</code></pre>
+				</section>
+
+				<section>
+					<h2>ClassLoader Solution </h2>
+					<h3>APC</h3>
+					<p>
+						Another solution is to cache the location of each class after it's located the first time.
+					</p>
+<pre><code data-trim>
+$loader = require_once __DIR__ . '/../app/bootstrap.php.cache';
+$loader = new ApcClassLoader('sf2', $loader);
+$loader->register(true);
+</code></pre>
+				</section>
+
+				<section>
+					<h1>Symfony CSS Selector</h1>
+					<pre><code data-trim>composer require symfony/css-selector</code></pre>
+					<p>The CssSelector component converts CSS selectors to XPath expressions.</p>
+					<ul>
+						<li><a href="https://github.com/symfony/CssSelector" target="_blank">github.com/symfony/CssSelector</a></li>
+						<li><a href="http://symfony.com/doc/current/components/css_selector.html" target="_blank">symfony.com</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Symfony CSS Selector</h2>
+
+<pre><code data-trim>
+use Symfony\Component\CssSelector\CssSelector;
+echo CssSelector::toXPath('div.item > h4 > a');
+</code></pre>
+				</section>
+
+				<section>
+					<h2>Symfony CSS Selector</h2>
+					<p>Especially nice with <a href="https://github.com/symfony/DomCrawler" target="_blank">DOM Crawler</a>
+<pre><code data-trim>
+use Symfony\Component\DomCrawler\Crawler;
+
+$crawler = new Crawler();
+$crawler->addContent('&lt;html&gt;&lt;body&gt;&lt;p&gt;Hello World!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;');
+echo $crawler->filter('body > p')->text();
+</code></pre>
+				</section>
+
+				<section>
+					<h1>Symfony Dependency Injection</h1>
+					<pre><code data-trim>composer require symfony/dependency-injection</code></pre>
+					<p>The DependencyInjection component allows you to standardize and centralize the way objects are constructed in your application.</p>
+					<ul>
+						<li><a href="https://github.com/symfony/CssSelector" target="_blank">github.com/symfony/CssSelector</a></li>
+						<li><a href="http://symfony.com/doc/current/components/dependency_injection/introduction.html" target="_blank">symfony.com</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Symfony Dependency Injection</h2>
+					<p>An example class</p>
+<pre><code data-trim>
+class Mailer {
+  
+
+  public function __construct($transport) {
+    $this->transport = $transport;
+  }
+
+  // ...
+}
+</code></pre>
+				</section>
+
+				<section>
+					<h2>Symfony Dependency Injection</h2>
+					<p>Building the IoC Container</p>
+
+<pre><code data-trim>
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+
+$container = new ContainerBuilder();
+
+$container->setParameter('mailer.transport', 'sendmail');
+
+$container
+  ->register('my.mailer', 'Mailer')
+  ->addArgument('%mailer.transport%');
+
+</code></pre>
+				</section>
+
+				<section>
+					<h1>Symfony Event Dispatcher</h1>
+					<pre><code data-trim>composer require symfony/event-dispatcher</code></pre>
+					<p>The EventDispatcher component provides tools that allow your application components to communicate with each other by dispatching events and listening to them.</p>
+					<ul>
+						<li><a href="https://github.com/symfony/EventDispatcher" target="_blank">github.com/symfony/EventDispatcher</a></li>
+						<li><a href="http://symfony.com/doc/current/components/event_dispatcher/introduction.html" target="_blank">symfony.com</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Symfony Event Dispatcher</h2>
+					<p>
+						The Symfony EventDispatcher component implements the Mediator pattern in a simple and effective way to make your projects truly extensible.
+					</p>
+
+<pre><code data-trim>
+use Symfony\Component\EventDispatcher\EventDispatcher as Dispatcher;
+use Symfony\Component\EventDispatcher\Event;
+
+$dispatcher = new Dispatcher();
+
+$dispatcher->addListener('user_registered', function(Event $event) {
+  // send mail to admin
+});
+
+$dispatcher->dispatch('user_registered');
+</code></pre>
+				</section>
+
+				<section>
+					<h1>Symfony HTTP Foundation</h1>
+					<pre><code data-trim>composer require symfony/http-foundation</code></pre>
+					<p>The HttpFoundation component defines an object-oriented layer for the HTTP specification.</p>
+					<ul>
+						<li><a href="https://github.com/symfony/HttpFoundation" target="_blank">github.com/symfony/HttpFoundation</a></li>
+						<li><a href="http://symfony.com/doc/current/components/http_foundation/introduction.html" target="_blank">symfony.com</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Symfony HTTP Foundation</h2>
+					<h3>Request</h3>
+<pre><code data-trim>
+use Symfony\Component\HttpFoundation\Request;
+
+$request = Request::createFromGlobals();
+
+// query string is ?foo=bar
+
+$request->query->get('foo');
+// returns bar
+
+$request->query->get('bar');
+// returns null
+</code></pre>
+				</section>
+
+				<section>
+					<h2>Symfony HTTP Foundation</h2>
+					<h3>Response</h3>
+<pre><code data-trim>
+use Symfony\Component\HttpFoundation\Response;
+
+$response = new Response(
+  'The Content',
+  Response::HTTP_OK,
+  ['Content-Type' => 'text/html']
+);
+
+// check for HTTP compliance 
+$response->prepare($request);
+
+$response->send();
+</code></pre>
+				</section>
+
+				<section>
+					<h1>PSR-7?</h1>
+				</section>
+
+				<section>
+					<h1>HTTP Kernel</h1>
+					<pre><code data-trim>composer require symfony/http-kernel</code></pre>
+					<p>The HttpKernel component provides a structured process for converting a <strong>Request</strong> into a <strong>Response</strong> by making use of the <em>EventDispatcher</em>. It's flexible enough to create a full-stack framework (Symfony), a micro-framework (Silex) or an advanced CMS system (Drupal).</p>
+					<ul>
+						<li><a href="https://github.com/symfony/HttpKernel" target="_blank">github.com/symfony/HttpKernel</a></li>
+						<li><a href="http://symfony.com/doc/current/components/http_kernel/introduction.html" target="_blank">symfony.com</a></li>
+						<li><a href="http://stackphp.com/" target="_blank">stackphp.com</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>HTTP Kernel</h2>
+					<p>The <strong>User</strong> asks for a <strong>Resource</strong> in a Browser</p>
+					<p>The Browser sends a <strong>Request</strong> to the Server</p>
+					<p>Symfony gives the Developer a Request Object</p>
+					<p>The Developer "converts" the Request Object to a Response Object</p>
+					<p>The Server sends back a <strong>Response</strong> to the Browser</p>
+					<p>The Browser displays the <strong>Resource</strong> to the <strong>User</strong>
+				</section>
+
+				<section>
+					<h2>HTTP Kernel</h2>
+<pre><code data-trim>
+namespace Symfony\Component\HttpKernel;
+
+use Symfony\Component\HttpFoundation\Request;
+
+interface HttpKernelInterface {
+  // ...
+
+  /**
+   * @return Response A Response instance
+   */
+  public function handle(
+    Request $request,
+    $type = self::MASTER_REQUEST,
+    $catch = true
+  );
+}
+</code></pre>
+				</section>
+
+				<section>
+					<h1>Symfony Routing</h1>
+					<pre><code data-trim>composer require symfony/routing</code></pre>
+					<p>The Routing component maps an HTTP request to a set of configuration variables.</p>
+					<ul>
+						<li><a href="https://github.com/symfony/Routing" target="_blank">github.com/symfony/Routing</a></li>
+						<li><a href="http://symfony.com/doc/current/components/routing/introduction.html" target="_blank">symfony.com</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Symfony Routing</h2>
+<pre><code data-trim>
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Matcher\UrlMatcher;
+use Symfony\Component\Routing\RequestContext;
+use Symfony\Component\Routing\RouteCollection;
+use Symfony\Component\Routing\Route;
+
+$routes = new RouteCollection();
+$route = new Route(
+  'my-data-service',
+  ['controller' => 'MyDataController']
+);
+$routes->add('data_service', $route);
+
+$context = new RequestContext();
+$context->fromRequest(Request::createFromGlobal());
+
+$matcher = new UrlMatcher($routes, $context);
+
+$parameters = $matcher->match('/my-data-service');
+</code></pre>
+				</section>
+
+				<section>
+					<h2>Routing in D7 vs D8</h2>
+					<ul>
+						<li>Rather than defined in <code data-trim>hook_menu()</code>, routes are defined in <code data-trim>my_module.routing.yml</code></li>
+						<li>Routes need a machine name. By convention, route machine names should be <code data-trim>module_name.sub_name</code></li>
+						<li>Wildcard parameters like <code data-trim>'%name'</code></li> are now in the format of <code data-trim>{node}</code> and will map to the name (e.g. <code data-trim>$node</code> in <code data-trim>node_view($node)</code>)</li>
+						<li>The <code data-trim>_controller</code> or <code data-trim>_content</code> keys <strong>may not</strong> point to functions. They should reference a method of a class.</li>
+						<li><code data-trim>hook_menu_alter()</code> is no more (you could implement a <code data-trim>RouteSubscriber</code> instead).</li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Routing in Drupal</h2>
+<pre class="fragment"><code data-trim>
+$items['admin/content/book'] = [
+  'title' => 'Books',
+  'description' => 'Manage them books.',
+  'page callback' => 'book_admin_overview',
+  'access arguments' => array('administer book outlines'),
+  'type' => MENU_LOCAL_TASK,
+  'file' => 'book.admin.inc',
+];
+</code></pre>
+
+<pre class="fragment"><code data-trim>
+# book.routing.yml
+book.admin:
+  path: '/admin/content/book'
+  defaults:
+    _controller: '\Drupal\book\Controller\BookController::adminOverview'
+    _title: 'Books'
+  requirements:
+    _permission: 'administer book outlines'
+</code></pre>
+				</section>
+
+				<section>
+					<h1>Symfony Serializer</h1>
+					<pre><code data-trim>composer require symfony/serializer</code></pre>
+					<p>The Serializer component is meant to be used to turn objects into a specific format (XML, JSON, YAML, ...) and the other way around.</p>
+					<ul>
+						<li><a href="https://github.com/symfony/Serializer" target="_blank">github.com/symfony/Serializer</a></li>
+						<li><a href="http://symfony.com/doc/current/components/serializer.html" target="_blank">symfony.com</a></li>
+					</ul>
+				</section>
+				<section>
+					<h2>Symfony Serializer</h2>
+					<h3>Serializing an Object</h3>
+<pre><code data-trim>
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
+
+// Get data from Getters (call methods prefixed with get)
+$normalizer = new GetSetMethodNormalizer();
+$normalizer->setIgnoredAttributes(['oauth_token']);
+$encoder = new JsonEncoder();
+
+$serializer = new Serializer([$normalizer], [$encoder]);
+echo $serializer->serialize($user, 'json'); 
+// -> {"username": "admin", "email": "admin@example.com"}
+</code></pre>
+				</section>
+
+				<section>
+					<h2>Symfony Serializer</h2>
+					<h3>Deserializing an Object</h3>
+<pre><code data-trim>
+//<user>
+//  <username>admin</username>
+//  <email>admin@example.com</email>
+//</user>
+
+$user = $serializer->deserialize($data, 'Namics\User', 'xml');
+</code></pre>
+				</section>
+
+				<section>
+					<h1>Symfony Validator</h1>
+					<pre><code data-trim>composer require symfony/validator</code></pre>
+					<p>The component provides "validation constraints", which are simple objects containing the rules for the validation.</p>
+					<ul>
+						<li><a href="https://github.com/symfony/Validator" target="_blank">github.com/symfony/Validator</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Symfony Validator</h2>
+<pre><code data-trim>
+use Symfony\Component\Validator\Validation;
+use Symfony\Component\Validator\Constraints\Length as LengthConstraint;
+
+$validator = Validation::createValidator();
+$violations = $validator->validateValue(
+  'Namics',
+  new LengthConstraint(['min' => 10])
+);
+</code></pre>
+				</section>
+
+				<section>
+					<h2>Symfony Validator</h2>
+<pre><code data-trim>
+use Symfony\Component\Validator\Validation;
+use Symfony\Component\Validator\Constraints as Assert;
+
+class User {
+  /**
+   * @Assert\Length(min = 3)
+   * @Assert\NotBlank
+   */
+  private $name;
+
+  /**
+   * @Assert\Email
+   * @Assert\NotBlank
+   */
+  private $email;
+
+  /**
+   * @Assert\True(message = "User needs a Google Mail Account.")
+   */
+  public function isGmailUser() {
+    return false !== strpos($this->email, '@gmail.com');
+  }
+}
+
+$validator = Validation::createValidatorBuilder()
+  ->enableAnnotationMapping()
+  ->getValidator();
+
+$user = new User('Namics Admin', 'admin@namics.com');
+$violations = $validator->validate($user);
+</code></pre>
+				</section>
+
+				<section>
+					<h1>Symfony Process</h1>
+					<pre><code data-trim>composer require symfony/process</code></pre>
+					<p>The Process component executes commands in sub-processes.</p>
+					<ul>
+						<li><a href="https://github.com/symfony/Process" target="_blank">github.com/symfony/Process</a></li>
+						<li><a href="http://symfony.com/doc/current/components/process.html" target="_blank">symfony.com</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Symfony Process</h2>
+<pre><code data-trim>
+use Symfony\Component\Process\Process;
+
+$process = new Process ('ls -alh');
+$process->run();
+
+if (!$process->isSuccessful()) {
+  throw new \RuntimeException($process->getErrorOutput());
+}
+
+echo $process->getOutput();
+</code></pre>
+				</section>
+
+				<section>
+					<h1>Symfony YAML</h1>
+					<pre><code data-trim>composer require symfony/yaml</code></pre>
+					<p>The Yaml component loads and dumps YAML files.</p>
+
+<pre><code data-trim>
+use Symfony\Component\Yaml\Yaml;
+$array = Yaml::parse(file_get_contents('config.yml'));
+echo Yaml::dump($array);
+</code></pre>
+					<ul>
+						<li><a href="https://github.com/symfony/Yaml" target="_blank">github.com/symfony/Yaml</a></li>
+						<li><a href="http://symfony.com/doc/current/components/yaml/introduction.html" target="_blank">symfony.com</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h1>Twig</h1>
+					<pre><code data-trim>composer require twig/twig</code></pre>
+					<p>The flexible, fast, and secure template engine for PHP.</p>
+					<ul>
+						<li><a href="https://github.com/twigphp/Twig" target="_blank">github.com/twigphp/Twig</a></li>
+						<li><a href="http://twig.sensiolabs.org" target="_blank">twig.sensiolabs.org</a></li>
+						<li><a href="http://symfony.com/doc/current/cookbook/templating/twig_extension.html" target="_blank">symfony.com (Custom Twig Extension)</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Add Twig Extension in Drupal 8</h2>
+<pre><code data-trim>
+twig.extension.my_ext:
+  class: Twig_Extension_MyExt
+  tags:
+    - { name: twig.extension }
+</code></pre>
+				</section>
+
+				<section>
+					<h2>Twig Environment Internal</h2>
+<pre><code data-trim>
+$loader = new Twig_Loader_Filesystem('/path/to/templates');
+$twig = new Twig_Environment($loader, [
+  'cache' => '/path/to/twig_cache'
+]);
+
+$template = $twig->loadTemplate('index.html');
+echo $template->render(['foo' => 'bar', 'bar' => 'baz']);
+</code></pre>
+				</section>
+
+				<section>
+					<h1>Doctrine Common</h1>
+					<pre><code data-trim>composer require doctrine/common</code></pre>
+					<p>The Doctrine Common project is a library that provides extensions to core PHP functionality.</p>
+					<ul>
+						<li><a href="https://github.com/doctrine/common" target="_blank">github.com/doctrine/common</a></li>
+						<li><a href="http://www.doctrine-project.org/projects/common.html" target="_blank">doctrine-project.org</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Usage of Doctrine Common</h2>
+					<ul>
+						<li><strike>Class Loading</strike></li>
+						<li>Annotations</li>
+						<li><strike>Caching</strike></li>
+						<li><strike>Inflector</strike></li>
+						<li>Collections</li>
+					</ul>
+				</section>
+
+				<section>
+					<div class>
+						<h2>Annotations</h2>
+<pre><code data-trim>
+use Doctrine\Common\Annotations\AnnotationReader();
+
+$reader = new AnnotationReader();
+
+AnnotationRegistry::registerNamespace('Namics\MyProject\Annotations', [
+  'src/Annotations'
+]);
+</code></pre>
+					</div>
+
+					<div class="fragment">
+						<h2>Collections</h2>
+<pre><code data-trim>
+use Doctrine\Common\Collections\Collection;
+
+$collection = new Collection();
+$collection->add($user);
+
+if ($collection->contains($user)) {
+  $collection->removeElement($user);
+}
+</code></pre>
+					</div>
+				</section>
+
+
+				<section>
+					<h1>Guzzle</h1>
+					<pre><code data-trim>composer require guzzlehttp/guzzle</code></pre>
+					<p>Guzzle is a PHP HTTP client that makes it easy to send HTTP requests and trivial to integrate with web services.</p>
+					<ul>
+						<li><a href="https://github.com/guzzle/guzzle" target="_blank">github.com/guzzle/guzzle</a></li>
+						<li><a href="http://guzzle.readthedocs.org/" target="_blank">guzzle.readthedocs.org</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Guzzle</h2>
+<pre><code data-trim>
+$client = new GuzzleHttp\Client();
+$response = $client->get('http://namics.com');
+$res = $client->get('https://api.github.com/user', [
+  'auth' => ['user', 'pass']
+]);
+echo $res->getStatusCode(); // -> 200
+echo $res->getHeader('content-type'); 
+// -> 'application/json; charset=utf8'
+echo $res->getBody();
+
+$req = $client->createRequest('GET', 'http://httpbin.org' [
+  'future' => true
+]);
+
+$client->send($req)->then(function($response) {
+  echo 'Done!' . $response;
+});
+</code></pre>
+				</section>
+
+				<section>
+					<h1>CMF Routing</h1>
+					<pre><code data-trim>composer require symfony-cmf/routing</code></pre>
+					<p>The Symfony CMF Routing component extends the Symfony2 core routing component.</p>
+					<ul>
+						<li><a href="https://github.com/symfony-cmf/Routing" target="_blank">github.com/symfony<strong>-cmf</strong>/Routing</a></li>
+						<li><a href="http://symfony.com/doc/current/cmf/book/routing.html" target="_blank">symfony.com</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>CMF Routing 1/2</h2>
+					<p>
+						The default Symfony2 routing mechanism, with its configuration file approach, is not the best solution for [highly dynamic sites]. It does not provide a way of handling dynamic, user-defined routes, nor does it scale well to a large number of routes.
+					</p>
+					<p>
+						In order to address these issues, a new routing system needed to be developed that takes into account the typical needs of CMS routing.
+					</p>
+				</section>
+
+				<section>
+					<h2>CMF Routing 2/2</h2>
+					<p>
+						<ul>
+							<li>User-defined URLs;</li>
+							<li>Multi-site;</li>
+							<li>Multi-language;</li>
+							<li>Tree-like structures;</li>
+							<li>Content, Menu and Route Separation for added flexibility.</li>
+						</ul>
+					</p>
+					<p>
+						The Symfony CMF Routing component was created with these requirements in mind.
+					</p>
+				</section>
+
+				<section>
+					<h2>CMF Routing</h2>
+					<h3>ChainRouter</h3>
+
+					<p>
+						At the core of Symfony CMF's Routing component sits the ChainRouter. It is responsible for determining which Controller will handle each request.
+					</p>
+<pre><code data-trim>
+# app/config/config.yml
+cmf_routing:
+  chain:
+    routers_by_id:
+      cmf_routing.dynamic_router: 20
+      router.default: 100
+</code></pre>
+				</section>
+
+				<section>
+					<h2>CMF Routing</h2>
+					<h3>Route Provider</h3>
+
+<pre><code data-trim>
+class NamicsRouteProvider implements RouteProviderInterface {
+  // ...
+  public function getRouteCollectionForRequest(Request $request) {
+    $routes = $this->routeRepo->findAll();
+    $collection = new RouteCollection();
+
+    foreach ($routes as $route) {
+      $collection->add($route);
+    }
+
+    return $collection;
+  }
+
+  public function getRouteByName($name, $params = []) {
+    $route = $this->routeRepo->findByName($name);
+    return $route;
+  }
+
+  public function getRoutesByNames($names, $params = []) {
+    // ...
+  }
+}
+</code></pre>
+				</section>
+
+				<section>
+					<h1>Easy RDF</h1>
+					<pre><code data-trim>composer require easyrdf/easyrdf</code></pre>
+					<p>A PHP library designed to make it easy to consume and produce RDF.</p>
+<pre><code data-trim>
+$foaf = new EasyRdf_Graph('http://nih.me/foaf.rdf');
+$foaf->load();
+$me = $foaf->primaryTopic();
+echo 'My name is: ' . $me->get('foaf:name');
+</code></pre>
+					<ul>
+						<li><a href="https://github.com/njh/easyrdf" target="_blank">github.com/njh/easyrdf</a></li>
+						<li><a href="http://www.easyrdf.org/" target="_blank">easyrdf.org</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h1>PHP Unit</h1>
+					<pre><code data-trim>composer require phpunit/phpunit</code></pre>
+					<p>PHPUnit is a programmer-oriented testing framework for PHP.</p>
+<pre><code data-trim>
+class MoneyTest extends PHPUnit_Framework_TestCase {
+  public function testCanBeNegated() {
+    $a = new Money(1);
+    $b = $a->negate();
+    $this->assertEquals(-1, $b->getAmount());
+  }
+}
+</code></pre>
+					<ul>
+						<li><a href="https://github.com/sebastianbergmann/phpunit" target="_blank">github.com/sebastianbergmann/phpunit</a></li>
+						<li><a href="https://phpunit.de/" target="_blank">phpunit.de</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h1>Zend\Feed</h1>
+					<pre><code data-trim>composer require zendframework/zend-feed</code></pre>
+					<p>Zend\Feed provides functionality for consuming RSS and Atom feeds.</p>
+					<ul>
+						<li><a href="https://github.com/zendframework/Component_ZendFeed" target="_blank">github.com/zendframework/Component_ZendFeed</a></li>
+						<li><a href="http://framework.zend.com/manual/current/en/modules/zend.feed.introduction.html" target="_blank">framework.zend.com</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Zend\Feed</h2>
+<pre><code data-trim>
+use Zend\Feed\Reader\Reader;
+use Zend\Feed\Reader\Exception\RuntimeException;
+
+try {
+  $rss = Reader::import('https://www.namics.com/rss');
+} catch (RuntimeException $e) {}
+
+$channel = [
+  'title' => $rss->getTitle(),
+  'link' => $rss->getLink(),
+  'description' => $rss->getDescription(),
+  'items' => [],
+];
+
+foreach ($rss as $item) {
+  // ...
+}
+</code></pre>
+				</section>
+
+				<section>
+					<h1>vfsStream</h1>
+					<pre><code data-trim>composer require mikey179/vfsStream</code></pre>
+					<p>vfsStream is a stream wrapper for a virtual file system that may be helpful in unit tests to mock the real file system.</p>
+					<ul>
+						<li><a href="https://github.com/mikey179/vfsStream" target="_blank">github.com/mikey179/vfsStream</a></li>
+						<li><a href="http://vfs.bovigo.org/" target="_blank">vfs.bovigo.org</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>vfsStream</h2>
+<pre><code data-trim>
+class FileSystemTest extends PHPUnit_Framework_TestCase {
+  private $root;
+
+  public function setUp() {
+    $this->root = vfsStream::setup();
+  }
+
+  public function createsDiscoveryIfNotExists() {
+    $fs = new FileSystem($this->root->url() . '/tmp');
+    $fs->store('example', ['bar' => 303]);
+    $this->assertTrue($this->root->hasChild('tmp'));
+    $this->assertTrue($this->root->hasChild('tmp/example'));
+    $this->assertEquals(['bar' => 303],
+      unserialize($this->root->getChild('tmp/example')->getContent())
+    );
+  }
+}
+</code></pre>
+				</section>
+
+				<section>
+					<h1>Stack Builder</h1>
+					<pre><code data-trim>composer require stack/builder</code></pre>
+					<p>Stack/Builder is a small library that helps you construct a nested HttpKernelInterface decorator tree. It models it as a stack of middlewares.</p>
+
+					<ul>
+						<li><a href="https://github.com/stackphp/builder" target="_blank">github.com/stackphp/builder</a></li>
+						<li><a href="http://stackphp.com/" target="_blank">stackphp.com</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Stack Builder</h2>
+<pre><code data-trim>
+$app = new Silex\Application();
+
+$stack = (new Stack\Builder())
+  ->push('Stack\Session')
+  ->push(function (HttpKernelInterface $app) {
+    $cache = new Httpcache($app, new Store(__DIR__ . '/cache'));
+    return $cache;
+  })
+;
+
+$app = $stack->resolve($app);
+
+$request = Request::createFromGlobals();
+$response = $app->handle($request)->send();
+$app->terminate($request, $response);
+</code></pre>
+				</section>
+
+				<section>
+					<h1>Email Validator</h1>
+					<pre><code data-trim>composer require egulias/email-validator</code></pre>
+					<p>PHP Email validator library.</p>
+<pre><code data-trim>
+use Egulias\EmailValidator\EmailValidator;
+$validator = new EmailValidator();
+if ($validator->isValid($email)) {
+	echo $email . ' is valid.';
+}
+</code></pre>
+					<ul>
+						<li><a href="https://github.com/egulias/EmailValidator" target="_blank">github.com/egulias/EmailValidator</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h1>Behat Mink</h1>
+					<pre><code data-trim>composer require behat/mink behat/mink-goutte-driver</code></pre>
+					<p>Mink is an open source browser controller/emulator for web applications, written in PHP 5.3.</p>
+					<ul>
+						<li><a href="https://github.com/minkphp/Mink" target="_blank">github.com/minkphp/Mink</a></li>
+						<li><a href="http://mink.behat.org/en/latest/" target="_blank">mink.behat.org</a></li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>Behat Mink</h2>
+<pre><code data-trim>
+use Behat\Mink\Mink,
+    Behat\Mink\Session,
+    Behat\Mink\Driver\GoutteDriver,
+    Behant\Mink\Driver\Gouette\Client as GoutteClient;
+
+$startUrl = 'http://namics.com';
+
+$mink = new Mink([
+  'session1' => new Session(new GoutteDriver(new GoutteClient())),
+  'session2' => new Session(new GoutteDriver(new GoutteClient()))
+]);
+
+$mink->setDefaultSessionName('session2');
+$mink->getSession()->visit($startUrl);
+$mink->getSession()->getPage()->findLink('Jobs')->click();
+
+echo $mink->getSession()->getPage()->getContent();
+</code></pre>
+				</section>
+
+				<section>
+					<h1>Goutte</h1>
+					<pre><code data-trim>composer require fabpot/goutte</code></pre>
+					<p>Goutte is a screen scraping and web crawling library for PHP. It is a thin wrapper around <strong>BrowserKit</strong>, <strong>CssSelector</strong>, <strong>DomCrawler</strong> and <strong>Guzzle</strong>.</p>
+				
+					<ul>
+						<li><a href="https://github.com/FriendsOfPHP/Goutte" target="_blank">github.com/FriendsOfPHP/Goutte</a></li>
+						
+					</ul>
+				</section>
+
+				<section>
+					<h2>Goutte</h2>
+<pre><code data-trim>
+use Goutte\Client;
+$client = new Client();
+$crawler = $client->request('GET', 'http://www.namics.com');
+$link = $crawler->selectLink('Jobs')->link();
+$crawler = $client->click($link);
+</code></pre>
+				</section>
+
+				<section>
+					<h1>HTML5</h1>
+					<pre><code data-trim>composer require masterminds/html5</code></pre>
+					<p>An HTML5 parser and serializer for PHP.</p>
+<pre><code data-trim>
+use Masterminds\HTML5;
+
+$html = '&lt;html&gt;&lt;body&gt;&lt;header&gt;&lt;nav&gt;Foobar&lt;/nav&gt;&lt;/header&gt;&lt;/body&gt;&lt;/html&gt;';
+$html5 = new HTML5();
+$dom = $html5->loadHTML($html);
+
+print $html5->saveHTML($dom);
+
+$html5->save($dom, 'out.html');
+</code></pre>
+					<ul>
+						<li><a href="https://github.com/Masterminds/html5-php" target="_blank">github.com/Masterminds/html5-php</a></li>
+						<li><a href="http://masterminds.github.io/html5-php/" target="_blank">masterminds.github.io/html5-php</a></li>
+					</ul>
+				</section>
+
+				<section>
+					&lt;/drupal7&gt;
+				</section>
+
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// Full list of configuration options available at:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+				// Optional reveal.js plugins
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
